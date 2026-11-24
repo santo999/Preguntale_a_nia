@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Prototipo de alta resolución de Pregúntale a Nia: aprende a usar la inteligencia artificial en tu negocio.">
+<meta name="theme-color" content="#0F6B5C">
+<title>Pregúntale a Nia</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230F6B5C'/%3E%3Ctext x='32' y='45' font-family='Arial,sans-serif' font-size='38' font-weight='700' text-anchor='middle' fill='white'%3EN%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Baloo+2:wght@600;700;800&display=swap">
+<style>
+/* Layout: una columna de app móvil (máx. 430px) con barra de pestañas fija abajo; en escritorio se centra como un teléfono. */
+:root {
+  --bg: #E9F0EC;
+  --surface: #FFFFFF;
+  --surface-2: #F4F8F6;
+  --ink: #16302A;
+  --muted: #4F6A63;
+  --line: #D3E0DA;
+  --brand: #0F6B5C;
+  --brand-ink: #FFFFFF;
+  --brand-soft: #DCEFE8;
+  --mango: #D98A1C;
+  --mango-soft: #FCEBCF;
+  --ok: #1D7F48;
+  --ok-soft: #DCF2E4;
+  --warn: #9A6410;
+  --warn-soft: #FBEED3;
+  --bad: #B8381F;
+  --bad-soft: #F8DFD9;
+  --shadow: 0 1px 2px rgba(15, 50, 42, .08), 0 8px 20px rgba(15, 50, 42, .07);
+  --font-display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --radius: 14px;
+  --base: 17px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0C1513; --surface: #14221E; --surface-2: #19302A; --ink: #E5F1EC; --muted: #9DB7AF; --line: #2A403A;
+    --brand: #3DB79C; --brand-ink: #07211B; --brand-soft: #173A32; --mango: #F0B357; --mango-soft: #3A2B12;
+    --ok: #52C585; --ok-soft: #163A27; --warn: #E7B657; --warn-soft: #3A2E13; --bad: #F07C66; --bad-soft: #3E1D17;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0C1513; --surface: #14221E; --surface-2: #19302A; --ink: #E5F1EC; --muted: #9DB7AF; --line: #2A403A;
+  --brand: #3DB79C; --brand-ink: #07211B; --brand-soft: #173A32; --mango: #F0B357; --mango-soft: #3A2B12;
+  --ok: #52C585; --ok-soft: #163A27; --warn: #E7B657; --warn-soft: #3A2E13; --bad: #F07C66; --bad-soft: #3E1D17;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4); color-scheme: dark;
+}
+html { font-size: var(--base); }
+html[data-letra="grande"] { --base: 19px; }
+html[data-letra="muy-grande"] { --base: 21px; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 1rem; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--mango); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; margin: 0; text-wrap: balance; }
+h1 { font-size: 1.75rem; font-weight: 800; }
+h2 { font-size: 1.3rem; font-weight: 700; }
+h3 { font-size: 1.08rem; font-weight: 700; }
+p { margin: 0; }
+.app { max-width: 430px; margin: 0 auto; min-height: 100vh; background: var(--surface-2); position: relative; padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+.app.sin-tabs { padding-bottom: 24px; }
+@media (min-width: 640px) { .app { border-left: 1px solid var(--line); border-right: 1px solid var(--line); } }
+
+/* barra superior */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 10px; min-height: 56px; padding-block: 8px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top h2 { flex: 1; min-width: 0; font-size: 1.15rem; }
+.icon-btn { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; flex: none; }
+.icon-btn svg { width: 22px; height: 22px; }
+.chip-proto { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border: 1px dashed var(--line); border-radius: 999px; padding: 2px 8px; flex: none; }
+.marca { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.marca b { font-family: var(--font-display); font-size: 1.2rem; font-weight: 800; color: var(--brand); }
+
+/* contenido */
+.screen { display: flex; flex-direction: column; gap: 18px; padding-block: 18px 8px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.card.destacada { background: var(--brand); color: var(--brand-ink); border-color: transparent; box-shadow: var(--shadow); }
+.card.destacada .muted { color: inherit; opacity: .85; }
+.muted { color: var(--muted); }
+.small { font-size: .88rem; }
+.eyebrow { font-size: .78rem; letter-spacing: .07em; text-transform: uppercase; font-weight: 700; color: var(--muted); }
+.card.destacada .eyebrow { color: inherit; opacity: .85; }
+.row { display: flex; align-items: center; gap: 10px; }
+.row > .grow { flex: 1; min-width: 0; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 12px 18px; border-radius: 12px;
+  border: 2px solid transparent; font-weight: 700; font-size: 1rem; text-decoration: none; text-align: center; }
+.btn svg { width: 20px; height: 20px; flex: none; }
+.btn-primario { background: var(--brand); color: var(--brand-ink); }
+.btn-mango { background: var(--mango); color: #1D1405; }
+.btn-claro { background: var(--surface); color: var(--brand); border-color: var(--brand); }
+.card.destacada .btn-claro { background: var(--brand-ink); color: var(--brand); border-color: var(--brand-ink); }
+.btn-bloque { width: 100%; }
+.btn-texto { background: none; border: none; color: var(--brand); font-weight: 700; padding: 8px 0; min-height: 44px; text-align: left; }
+
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); white-space: nowrap; }
+.pill.mango { background: var(--mango-soft); color: var(--warn); }
+.pill.gris { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+
+/* opciones de selección (onboarding) */
+.opciones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.opcion { background: var(--surface); border: 2px solid var(--line); border-radius: var(--radius); padding: 14px 12px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; text-align: left; min-height: 104px; }
+.opcion svg { width: 30px; height: 30px; color: var(--brand); }
+.opcion[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-soft); }
+.opcion b { font-size: .98rem; line-height: 1.2; }
+.lista-opciones { display: flex; flex-direction: column; gap: 10px; }
+.lista-opciones .opcion { flex-direction: row; align-items: center; min-height: 60px; }
+.pasos-onb { display: flex; gap: 6px; }
+.pasos-onb span { height: 6px; flex: 1; border-radius: 999px; background: var(--line); }
+.pasos-onb span.on { background: var(--brand); }
+
+/* progreso */
+.barra { height: 10px; background: var(--brand-soft); border-radius: 999px; overflow: hidden; }
+.barra i { display: block; height: 100%; background: var(--mango); border-radius: 999px; }
+.card.destacada .barra { background: rgba(255, 255, 255, .25); }
+
+/* accesos rápidos */
+.accesos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.acceso { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 8px; text-align: left; min-height: 96px; }
+.acceso svg { width: 26px; height: 26px; color: var(--brand); }
+.acceso b { font-size: .98rem; line-height: 1.2; }
+
+/* lecciones */
+.modulo { display: flex; flex-direction: column; gap: 8px; }
+.leccion { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; text-align: left; width: 100%; }
+.leccion .estado { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--surface-2); border: 2px solid var(--line); color: var(--muted); }
+.leccion .estado svg { width: 18px; height: 18px; }
+.leccion.hecha .estado { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+.leccion.actual { border-color: var(--brand); border-width: 2px; }
+.leccion.actual .estado { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.leccion .grow b { display: block; line-height: 1.25; }
+
+/* video */
+.video { aspect-ratio: 16 / 9; max-width: 100%; border-radius: var(--radius); background: linear-gradient(135deg, var(--brand), #0B4D42); color: #fff; display: grid; place-items: center; position: relative; overflow: hidden; }
+.video button { width: 72px; height: 72px; border-radius: 50%; border: none; background: rgba(255, 255, 255, .95); color: #0B4D42; display: grid; place-items: center; }
+.video button svg { width: 30px; height: 30px; margin-left: 4px; }
+.video .sub { position: absolute; left: 12px; right: 12px; bottom: 10px; font-size: .85rem; background: rgba(0, 0, 0, .45); padding: 4px 8px; border-radius: 6px; }
+.pasos { counter-reset: paso; display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.pasos li { counter-increment: paso; display: flex; gap: 12px; align-items: flex-start; }
+.pasos li::before { content: counter(paso); flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--brand-soft); color: var(--brand); font-weight: 700; display: grid; place-items: center; }
+.beneficios { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.beneficios li { display: flex; gap: 10px; align-items: flex-start; }
+.beneficios svg { width: 22px; height: 22px; color: var(--ok); flex: none; margin-top: 1px; }
+.aviso { border-radius: 12px; padding: 12px 14px; background: var(--warn-soft); color: var(--ink); display: flex; gap: 10px; }
+.aviso svg { width: 22px; height: 22px; color: var(--warn); flex: none; margin-top: 2px; }
+
+/* instrucción para copiar */
+.instruccion { background: var(--surface-2); border: 1px dashed var(--brand); border-radius: 12px; padding: 12px 14px; font-size: .98rem; white-space: pre-wrap; }
+
+/* chat de Nia */
+.chat { display: flex; flex-direction: column; gap: 12px; }
+.msg { scroll-margin-top: 76px; max-width: 88%; padding: 12px 14px; border-radius: 16px; display: flex; flex-direction: column; gap: 10px; }
+.msg.nia { background: var(--surface); border: 1px solid var(--line); border-top-left-radius: 4px; align-self: flex-start; }
+.msg.yo { background: var(--brand); color: var(--brand-ink); border-top-right-radius: 4px; align-self: flex-end; }
+.nia-cab { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--brand); }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--mango); color: #1D1405; display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; flex: none; }
+.sugerencias { display: flex; flex-wrap: wrap; gap: 8px; }
+.sugerencia { border: 1px solid var(--brand); color: var(--brand); background: var(--surface); border-radius: 999px; padding: 8px 12px; font-size: .92rem; text-align: left; }
+.entrada { position: sticky; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); background: var(--surface-2); padding-block: 8px; display: flex; gap: 8px; }
+.entrada input { flex: 1; min-width: 0; min-height: 52px; border-radius: 12px; border: 2px solid var(--line); padding: 0 14px; background: var(--surface); }
+.mini-herr { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; background: var(--surface-2); }
+
+/* fichas */
+.ficha-lista { display: flex; flex-direction: column; gap: 10px; }
+.ficha-item { display: flex; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; text-align: left; width: 100%; }
+.logo { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; flex: none; color: #fff; }
+.tabla-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+tr:last-child td { border-bottom: none; }
+.si { color: var(--ok); font-weight: 700; }
+.no { color: var(--muted); }
+.lim { color: var(--warn); font-weight: 700; }
+.seccion-ficha { display: flex; flex-direction: column; gap: 6px; }
+.seccion-ficha ul { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 4px; }
+
+/* filtros */
+.filtros { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.filtro { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 14px; white-space: nowrap; font-weight: 700; color: var(--muted); }
+.filtro[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+
+/* formulario */
+.campo { display: flex; flex-direction: column; gap: 6px; }
+.campo label { font-weight: 700; }
+.campo input, .campo select { min-height: 52px; border-radius: 12px; border: 2px solid var(--line); padding: 0 14px; background: var(--surface); font-size: 1.05rem; }
+.resultado { background: var(--brand-soft); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 4px; }
+.resultado .grande { font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--brand); font-variant-numeric: tabular-nums; }
+.cuaderno { background: repeating-linear-gradient(var(--surface), var(--surface) 30px, var(--line) 31px); border: 1px solid var(--line); border-radius: 12px; padding: 6px 14px; font-variant-numeric: tabular-nums; }
+.cuaderno div { display: flex; justify-content: space-between; height: 31px; align-items: center; }
+
+/* semáforo */
+.semaforo { display: flex; flex-direction: column; gap: 10px; }
+.luz { border-radius: 12px; padding: 12px 14px; display: flex; gap: 12px; }
+.luz .punto { width: 18px; height: 18px; border-radius: 50%; flex: none; margin-top: 3px; }
+.luz.verde { background: var(--ok-soft); } .luz.verde .punto { background: var(--ok); }
+.luz.amarilla { background: var(--warn-soft); } .luz.amarilla .punto { background: var(--mango); }
+.luz.roja { background: var(--bad-soft); } .luz.roja .punto { background: var(--bad); }
+.pregunta-quiz { display: flex; flex-direction: column; gap: 8px; }
+.respuestas { display: flex; gap: 8px; flex-wrap: wrap; }
+.respuestas button { flex: 1; min-width: 120px; min-height: 48px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); font-weight: 700; }
+.feedback { border-radius: 10px; padding: 10px 12px; font-size: .95rem; }
+.feedback.bien { background: var(--ok-soft); }
+.feedback.mal { background: var(--bad-soft); }
+
+/* planes */
+.plan { border: 2px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.plan.recomendado { border-color: var(--mango); }
+.plan .precio { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.plan ul { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 4px; }
+
+/* logros */
+.logros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.logro { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 6px; text-align: center; font-size: .82rem; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.logro .medalla { width: 40px; height: 40px; border-radius: 50%; background: var(--mango-soft); color: var(--warn); display: grid; place-items: center; }
+.logro.bloq { opacity: .5; }
+.logro svg { width: 22px; height: 22px; }
+
+/* segmentado */
+.segmentado { display: flex; border: 2px solid var(--line); border-radius: 12px; overflow: hidden; }
+.segmentado button { flex: 1; min-height: 48px; border: none; background: var(--surface); font-weight: 700; }
+.segmentado button[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); }
+.switch { width: 56px; height: 32px; border-radius: 999px; border: none; background: var(--line); position: relative; flex: none; }
+.switch::after { content: ""; position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: var(--surface); transition: left .15s; }
+.switch[aria-checked="true"] { background: var(--brand); }
+.switch[aria-checked="true"]::after { left: 28px; }
+
+/* celebración */
+.celebra { text-align: center; align-items: center; padding-top: 40px; }
+.celebra .medalla-grande { width: 120px; height: 120px; border-radius: 50%; background: var(--mango); color: #1D1405; display: grid; place-items: center; }
+.celebra .medalla-grande svg { width: 60px; height: 60px; }
+
+/* bienvenida */
+.hero { background: var(--brand); color: var(--brand-ink); margin-top: calc(-1 * env(safe-area-inset-top, 0px)); padding-top: calc(env(safe-area-inset-top, 0px) + 40px); padding-bottom: 32px; border-radius: 0 0 28px 28px; }
+.hero-in { display: flex; flex-direction: column; gap: 14px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.hero .logo-nia { width: 84px; height: 84px; border-radius: 24px; background: var(--mango); color: #1D1405; display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 2.1rem; }
+.hero h1 { font-size: 2.2rem; }
+.hero p { font-size: 1.12rem; opacity: .92; }
+
+/* pestañas */
+.tabs { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: var(--surface); border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(5, 1fr); z-index: 6;
+  padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.tab { border: none; background: none; min-height: 68px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: .74rem; font-weight: 700; color: var(--muted); }
+.tab svg { width: 24px; height: 24px; }
+.tab[aria-current="page"] { color: var(--brand); }
+.tab.nia-tab .burbuja { width: 48px; height: 48px; border-radius: 50%; background: var(--mango); color: #1D1405; display: grid; place-items: center; margin-top: -18px; box-shadow: var(--shadow); font-family: var(--font-display); font-weight: 800; font-size: 1rem; }
+
+/* toast */
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--surface); padding: 12px 18px; border-radius: 12px; z-index: 20; max-width: min(92vw, 400px); font-weight: 700; box-shadow: var(--shadow); }
+@media (prefers-reduced-motion: no-preference) { .toast { animation: sube .2s ease-out; } @keyframes sube { from { transform: translate(-50%, 10px); opacity: 0; } } }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <div id="view"></div>
+  <nav class="tabs" id="tabs" aria-label="Secciones">
+    <button class="tab" data-ir="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>Inicio</button>
+    <button class="tab" data-ir="aprender"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/><path d="M9 7h6"/></svg>Aprender</button>
+    <button class="tab nia-tab" data-ir="nia"><span class="burbuja">Nia</span>Pregúntale</button>
+    <button class="tab" data-ir="herramientas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Herramientas</button>
+    <button class="tab" data-ir="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Perfil</button>
+  </nav>
+</div>
+
+<script>
+(function () {
+  // ---------- iconos ----------
+  const I = {
+    atras: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+    play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l13 8-13 8z"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>',
+    candado: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+    copiar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
+    ojo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9L2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
+    ayuda: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5"/><path d="M12 16.5h.01"/></svg>',
+    hoja: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg>',
+    escudo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+    lista: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg>',
+    medalla: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M8.5 14L7 22l5-3 5 3-1.5-8"/></svg>',
+    estrella: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>',
+    calendario: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    tienda: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M5 12v8h14v-8"/><path d="M10 20v-5h4v5"/></svg>',
+    lapiz: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg>',
+    cruz: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 7v10M7 12h10"/></svg>',
+    llave: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.5a4 4 0 0 0 5 5L12 19l-3 1 1-3 7.5-7.5"/><path d="M14.5 6.5L17 4"/><path d="M4 4l6 6"/></svg>',
+    camisa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l-5 3 2 4 3-1v12h8V9l3 1 2-4-5-3a4 4 0 0 1-8 0z"/></svg>',
+    celular: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg>',
+    enviar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>',
+    reloj: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  };
+
+  // ---------- datos ----------
+  const NEGOCIOS = [
+    { id: 'tienda', nombre: 'Tienda de barrio o minimercado', corto: 'tienda de barrio', icon: 'tienda' },
+    { id: 'papeleria', nombre: 'Papelería o miscelánea', corto: 'papelería', icon: 'lapiz' },
+    { id: 'drogueria', nombre: 'Droguería', corto: 'droguería', icon: 'cruz' },
+    { id: 'ferreteria', nombre: 'Ferretería', corto: 'ferretería', icon: 'llave' },
+    { id: 'ropa', nombre: 'Ropa, calzado o accesorios', corto: 'tienda de ropa', icon: 'camisa' },
+    { id: 'redes', nombre: 'Venta por redes sociales', corto: 'negocio de venta por redes', icon: 'celular' },
+  ];
+  const METAS = ['Controlar el inventario', 'Hacer publicidad', 'Llevar las cuentas', 'Atender a mis clientes', 'Calcular precios'];
+  const MODULOS = [
+    { titulo: 'Inventario y pedidos', lecciones: [
+      { id: 'L1', t: 'Haz tu lista de pedido con IA', min: 7, plan: 'gratis' },
+      { id: 'L2', t: 'Detecta lo que no se vende', min: 6, plan: 'gratis' },
+      { id: 'L3', t: 'Alertas de vencimiento en una hoja de cálculo', min: 8, plan: 'basico' } ] },
+    { titulo: 'Publicidad por WhatsApp', lecciones: [
+      { id: 'L4', t: 'Escribe un estado de WhatsApp que venda', min: 5, plan: 'gratis' },
+      { id: 'L5', t: 'Crea un aviso con Canva', min: 9, plan: 'gratis' },
+      { id: 'L6', t: 'Ideas de promociones por temporada', min: 6, plan: 'basico' } ] },
+    { titulo: 'Cuentas y ganancias', lecciones: [
+      { id: 'L7', t: '¿Cuánto gané hoy?', min: 7, plan: 'gratis' },
+      { id: 'L8', t: 'Calcula el precio con ganancia', min: 6, plan: 'gratis' },
+      { id: 'L9', t: 'Pasa el cuaderno a una hoja de cálculo', min: 10, plan: 'basico' } ] },
+    { titulo: 'Atención a clientes', lecciones: [
+      { id: 'L10', t: 'Respuestas rápidas para WhatsApp Business', min: 6, plan: 'basico' },
+      { id: 'L11', t: 'Responde un reclamo con buen tono', min: 5, plan: 'basico' } ] },
+    { titulo: 'Uso seguro de la IA', lecciones: [
+      { id: 'L12', t: 'Qué datos nunca compartir con la IA', min: 5, plan: 'gratis' } ] },
+  ];
+  const TOTAL = MODULOS.reduce((n, m) => n + m.lecciones.length, 0);
+  const INFO = {
+    L1: { logro: 'Una lista de pedido ordenada por prioridad, hecha a partir de lo que vendiste en la semana en tu {negocio}.', herr: 'metaai', alt: 'Gratis, dentro de WhatsApp. También sirve ChatGPT o Gemini.',
+      pasos: ['Anota o toma foto de lo que vendiste esta semana.', 'Copia la instrucción de la práctica.', 'Pégala en Meta AI y agrega tu lista de ventas.', 'Revisa la respuesta antes de hacer el pedido.'],
+      limite: 'la IA no sabe cuánto tienes en bodega si no se lo dices, y puede equivocarse en las cantidades. Tú conoces tu negocio.', instr: 0,
+      recordar: 'La IA te ayuda a ordenar, pero la decisión final del pedido es tuya.' },
+    L2: { logro: 'Saber qué productos se están quedando quietos y tener 3 ideas para venderlos.', herr: 'chatgpt', alt: 'Tiene versión gratuita. También sirve Gemini.',
+      pasos: ['Haz una lista de tus productos y cuántos vendiste en el mes.', 'Copia la instrucción de la práctica.', 'Pégala en ChatGPT con tu lista.', 'Elige la idea que puedas aplicar esta semana.'],
+      limite: 'la IA no conoce a tus clientes ni la temporada de tu barrio. Ajusta las ideas a tu realidad.', instr: 1,
+      recordar: 'Un producto quieto es plata quieta: revísalo cada mes.' },
+    L4: { logro: 'Un estado de WhatsApp corto y llamativo para anunciar un producto o una promoción.', herr: 'metaai', alt: 'Gratis, dentro de WhatsApp. También sirve ChatGPT.',
+      pasos: ['Elige el producto y el precio que quieres anunciar.', 'Copia la instrucción y cambia lo que está entre corchetes.', 'Pégala en Meta AI dentro de WhatsApp.', 'Ajusta el texto a tu forma de hablar y publícalo.'],
+      limite: 'la IA puede inventar promociones o precios que no ofreces. Revisa cada dato antes de publicar.', instr: 2,
+      recordar: 'Un buen estado es corto, tiene el precio y dice qué hacer, por ejemplo: "pide hoy por este medio".' },
+    L5: { logro: 'Un aviso con imagen para tu estado de WhatsApp o Instagram, hecho con una plantilla.', herr: 'canva', alt: 'Plan gratuito con plantillas.',
+      pasos: ['Abre Canva y busca "promoción" en las plantillas.', 'Cambia el texto, el precio y la foto por los de tu producto.', 'Si quieres, usa la IA de Canva para quitar el fondo de la foto.', 'Descarga el aviso y compártelo en tu estado.'],
+      limite: 'en el plan gratuito, varias funciones de IA de Canva tienen usos limitados.', instr: 3,
+      recordar: 'Personaliza la plantilla con tus colores y fotos para que tu aviso no se parezca al de otros.' },
+    L7: { logro: 'Saber cuánto te quedó de ganancia hoy, con la cuenta explicada paso a paso.', herr: 'chatgpt', alt: 'Tiene versión gratuita. También sirve Gemini.',
+      pasos: ['Suma lo que vendiste hoy y lo que gastaste.', 'Copia la instrucción y escribe tus totales.', 'Pégala en ChatGPT.', 'Revisa la cuenta con la calculadora del celular.'],
+      limite: 'la IA se puede equivocar al sumar. Revisa siempre la cuenta.', instr: 6,
+      recordar: 'Usa totales, no nombres de clientes ni números de cuenta.' },
+    L8: { logro: 'El precio de venta de un producto con la ganancia que quieres.', herr: 'chatgpt', alt: 'También puedes usar la plantilla Precio con ganancia.',
+      pasos: ['Busca la factura del proveedor y mira cuánto te cuesta cada unidad.', 'Decide cuánto le quieres ganar.', 'Copia la instrucción o usa la plantilla Precio con ganancia.', 'Compara el precio con los de tu barrio.'],
+      limite: 'la IA no conoce los precios de tu competencia. Compara antes de decidir.', instr: 7,
+      recordar: 'Revisa tus precios cada vez que el proveedor te suba el costo.' },
+    L12: { logro: 'Saber qué datos de tu negocio puedes compartir con la IA y cuáles nunca.', herr: null,
+      pasos: ['Mira el semáforo de datos.', 'Responde las 3 preguntas de práctica.', 'Revisa qué has escrito en tus chats con la IA.'],
+      limite: 'lo que escribes en una herramienta de IA puede quedar guardado en tu cuenta. Piensa antes de pegar.', instr: null,
+      recordar: 'Contraseñas, números de cuenta, códigos y datos de clientes: nunca.' },
+  };
+  const info = (id) => INFO[id] || INFO.L1;
+
+  const HERRAMIENTAS = {
+    chatgpt: { nombre: 'ChatGPT', empresa: 'OpenAI', color: '#2F6F5E', letra: 'C',
+      que: 'Un asistente que conversa contigo y escribe textos a partir de lo que le pidas.',
+      sirve: ['Armar tu lista de pedido a partir de lo que vendiste', 'Redactar mensajes y estados para tus clientes', 'Darte ideas de promociones', 'Ordenar números de ventas y gastos'],
+      llega: ['Entiende instrucciones en español sencillo', 'Responde en segundos', 'Trabaja con el texto que le pegues; según la versión, también con fotos'],
+      limites: ['Puede equivocarse o inventar datos, sobre todo en cuentas', 'No conoce tu negocio: solo sabe lo que tú le cuentas', 'Su información puede no estar al día'],
+      costo: 'Tiene versión gratuita con límites de uso. El plan pago es opcional.',
+      cuidado: 'No pegues contraseñas, números de cuenta, cédulas ni datos de tus clientes.' },
+    metaai: { nombre: 'Meta AI', empresa: 'Meta', color: '#2C5BA8', letra: 'M',
+      que: 'Un asistente que viene dentro de WhatsApp, Facebook e Instagram.',
+      sirve: ['Escribir un estado o un mensaje sin salir de WhatsApp', 'Pedir ideas rápidas para una promoción', 'Resolver dudas cortas mientras atiendes'],
+      llega: ['Ya está en el celular, no hay que instalar nada', 'Da respuestas cortas y rápidas', 'Algunas funciones, como crear imágenes, dependen del país y la versión'],
+      limites: ['Sus respuestas suelen ser generales', 'Puede equivocarse: revisa siempre', 'Las funciones disponibles cambian con frecuencia'],
+      costo: 'Gratis.',
+      cuidado: 'Hablar con Meta AI no es como hablar con una persona de confianza: no compartas datos sensibles.' },
+    gemini: { nombre: 'Gemini', empresa: 'Google', color: '#5B4BB7', letra: 'G',
+      que: 'El asistente de Google. Se usa con tu cuenta de Gmail.',
+      sirve: ['Escribir textos y mensajes', 'Resumir información larga', 'Ayudarte a organizar datos en tablas'],
+      llega: ['Funciona en el celular y en el computador', 'Se conecta con otras herramientas de Google'],
+      limites: ['Puede equivocarse o inventar datos', 'No sabe nada de tu negocio si no se lo dices'],
+      costo: 'Tiene versión gratuita con tu cuenta de Google. El plan pago es opcional.',
+      cuidado: 'No compartas contraseñas ni datos personales de tus clientes.' },
+    copilot: { nombre: 'Copilot', empresa: 'Microsoft', color: '#1F6FA8', letra: 'Co',
+      que: 'El asistente de Microsoft. Está en el navegador Edge, en Windows y en el celular.',
+      sirve: ['Escribir textos y mensajes', 'Buscar información y resumirla', 'Darte ideas para tu negocio'],
+      llega: ['Muestra de dónde sacó la información en muchas respuestas', 'Funciona en el celular y en el computador'],
+      limites: ['Puede equivocarse: revisa las fuentes', 'Las funciones con Excel suelen requerir plan pago'],
+      costo: 'Tiene versión gratuita. Algunas funciones son de pago.',
+      cuidado: 'No compartas información privada de tu negocio ni de tus clientes.' },
+    canva: { nombre: 'Canva', empresa: 'Canva', color: '#C2562A', letra: 'Ca',
+      que: 'Una herramienta de diseño con plantillas y funciones de IA para hacer avisos y publicaciones.',
+      sirve: ['Hacer avisos de promociones para WhatsApp e Instagram', 'Crear la lista de precios de tu negocio', 'Quitar el fondo a la foto de un producto'],
+      llega: ['Miles de plantillas listas para cambiar', 'Funciona en el celular y en el computador'],
+      limites: ['En el plan gratuito, varias funciones de IA tienen usos limitados', 'Si no personalizas la plantilla, tu aviso se parecerá al de otros'],
+      costo: 'Plan gratuito. El plan pago es opcional.',
+      cuidado: 'Revisa que las imágenes y textos que uses sean de tu negocio o de uso libre.' },
+  };
+
+  const INSTRUCCIONES = [
+    { tag: 'Inventario', t: 'Lista de pedido', txt: 'Tengo una {negocio} en Cali. Te voy a pasar lo que vendí esta semana. Organiza una lista de pedido para el proveedor, en orden de prioridad, y dime qué productos casi no se vendieron.\nEsta es mi lista: [pega aquí tus ventas]' },
+    { tag: 'Inventario', t: 'Productos que no se mueven', txt: 'Estos son los productos que tengo y cuántos vendí este mes: [pega tu lista]. Dime cuáles se están quedando quietos y dame 3 ideas para venderlos sin perder plata.' },
+    { tag: 'Publicidad', t: 'Estado de WhatsApp', txt: 'Escribe un estado de WhatsApp corto y amable para anunciar [producto] a [precio] en mi {negocio}. Máximo 3 líneas y una invitación a comprar hoy.' },
+    { tag: 'Publicidad', t: 'Promoción de temporada', txt: 'Dame 5 ideas de promociones para mi {negocio} en [temporada, por ejemplo: regreso a clases o diciembre]. Que sean fáciles de hacer y no me hagan perder ganancia.' },
+    { tag: 'Clientes', t: 'Respuesta a un cliente', txt: 'Un cliente me escribió esto por WhatsApp: [pega el mensaje]. Ayúdame a responderle de forma amable y corta, como lo haría el dueño de una {negocio}.' },
+    { tag: 'Clientes', t: 'Recordar un fiado sin incomodar', txt: 'Escribe un mensaje respetuoso para recordarle a un cliente que tiene una cuenta pendiente de [valor] en mi {negocio}. No uses su nombre ni datos personales.' },
+    { tag: 'Cuentas', t: '¿Cuánto gané hoy?', txt: 'Hoy vendí [total de ventas] y gasté [total de gastos] en [en qué]. Calcula cuánto me quedó de ganancia y explícamelo paso a paso para poder revisarlo.' },
+    { tag: 'Precios', t: 'Precio de venta', txt: 'Compro [producto] a [costo] cada uno y le quiero ganar [porcentaje] %. ¿A qué precio lo debo vender? Muéstrame la cuenta para revisarla.' },
+  ];
+
+  const NIA = [
+    { claves: ['aviso', 'estado', 'publicidad', 'anunciar', 'promoci'],
+      texto: 'Para un estado de WhatsApp te sirve Meta AI, que ya está en tu WhatsApp, o ChatGPT. Si quieres una imagen, usa Canva. Te dejo una instrucción lista para copiar y la lección que te enseña paso a paso.',
+      herr: 'metaai', leccion: 'L4', instr: 2 },
+    { claves: ['inventario', 'pedido', 'surtir', 'bodega', 'productos'],
+      texto: 'Para el inventario te sirve ChatGPT o Gemini: le pasas lo que vendiste y te arma la lista de pedido. Recuerda que la IA no sabe cuánto tienes en bodega si no se lo dices.',
+      herr: 'chatgpt', leccion: 'L1', instr: 0 },
+    { claves: ['seguro', 'datos', 'cuenta', 'contraseña', 'nequi', 'privad', 'confiar'],
+      texto: 'Puedes pedirle ayuda con números, pero nunca compartas contraseñas, números de cuenta, cédulas ni datos de tus clientes. Usa totales en vez de nombres. En "Uso seguro" está el semáforo de datos.',
+      ir: 'seguro', irTxt: 'Ver uso seguro' },
+    { claves: ['cuesta', 'costo', 'gratis', 'pagar', 'plata', 'cobran'],
+      texto: 'ChatGPT, Gemini, Meta AI, Copilot y Canva tienen versiones gratuitas con límites. Con ellas puedes hacer todas las lecciones de tu ruta. Los planes pagos de esas herramientas son opcionales.',
+      ir: 'herramientas', irTxt: 'Comparar herramientas' },
+    { claves: ['precio', 'ganancia', 'margen', 'vender a', 'cobrar'],
+      texto: 'Para calcular a cuánto vender, usa la plantilla "Precio con ganancia": pones lo que te cuesta el producto y cuánto le quieres ganar, y te da el precio redondeado.',
+      ir: 'precio', irTxt: 'Abrir la calculadora' },
+  ];
+  const NIA_SUGERENCIAS = ['¿Cómo hago un aviso para WhatsApp?', '¿Qué IA me ayuda con el inventario?', '¿Es seguro poner mis cuentas en ChatGPT?', '¿Cuánto cuesta usar estas herramientas?'];
+
+  // ---------- estado ----------
+  const DEF = { negocio: 'tienda', metas: ['Controlar el inventario', 'Hacer publicidad'], minutos: 10, letra: 'normal', hechas: ['L4', 'L12'], racha: 3, recordatorio: true, dia: 'Todos los días', hora: '7:00 a. m.', favoritos: [] };
+  let S = Object.assign({}, DEF);
+  try { const g = JSON.parse(localStorage.getItem('nia-estado') || 'null'); if (g) S = Object.assign({}, DEF, g); } catch (e) {}
+  const guardar = () => { try { localStorage.setItem('nia-estado', JSON.stringify(S)); } catch (e) {} };
+  let chat = [];
+
+  const neg = () => NEGOCIOS.find((n) => n.id === S.negocio) || NEGOCIOS[0];
+  const leccion = (id) => { for (const m of MODULOS) for (const l of m.lecciones) if (l.id === id) return Object.assign({ modulo: m.titulo }, l); return null; };
+  const actual = () => { for (const m of MODULOS) for (const l of m.lecciones) if (!S.hechas.includes(l.id) && l.plan === 'gratis') return l; return MODULOS[0].lecciones[0]; };
+  const conNegocio = (t) => t.replaceAll('{negocio}', neg().corto);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const pesos = (n) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n);
+  document.documentElement.dataset.letra = S.letra;
+
+  function toast(msg) {
+    document.querySelectorAll('.toast').forEach((t) => t.remove());
+    const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg;
+    document.body.appendChild(t); setTimeout(() => t.remove(), 2600);
+  }
+  async function copiar(texto) {
+    try { await navigator.clipboard.writeText(texto); toast('Instrucción copiada'); }
+    catch (e) { toast('Mantén presionado el texto para copiarlo'); }
+  }
+
+  // ---------- piezas ----------
+  const barra = (titulo, atras) => `<header class="top">${atras ? `<button class="icon-btn" data-ir="${atras}" aria-label="Volver">${I.atras}</button>` : ''}<h2>${titulo}</h2><span class="chip-proto">Prototipo</span></header>`;
+  const pillPlan = (l) => l.plan === 'gratis' ? '<span class="pill ok">Gratis</span>' : `<span class="pill mango">${I.candado.replace('<svg', '<svg width="12" height="12"')} Básico</span>`;
+
+  function filaLeccion(l) {
+    const hecha = S.hechas.includes(l.id), esActual = actual().id === l.id, bloq = l.plan !== 'gratis';
+    const icono = hecha ? I.check : bloq ? I.candado : esActual ? I.play : I.reloj;
+    return `<button class="leccion ${hecha ? 'hecha' : ''} ${esActual ? 'actual' : ''}" data-leccion="${l.id}">
+      <span class="estado">${icono}</span>
+      <span class="grow"><b>${esc(l.t)}</b><span class="muted small">${l.min} min · ${hecha ? 'Completada' : esActual ? 'Sigue aquí' : bloq ? 'Plan Básico' : 'Por empezar'}</span></span>
+      ${pillPlan(l)}</button>`;
+  }
+
+  // ---------- pantallas ----------
+  const P = {};
+
+  P.bienvenida = () => `
+    <section class="hero"><div class="hero-in">
+      <div class="logo-nia">Nia</div>
+      <h1>Pregúntale a Nia</h1>
+      <p>Aprende a usar la inteligencia artificial en tu negocio, con lecciones de 5 a 10 minutos desde tu celular.</p>
+    </div></section>
+    <div class="screen">
+      <div class="card"><h3>Con Nia vas a poder</h3>
+        <ul class="beneficios">
+          <li>${I.check}<span>Saber qué herramienta de IA te sirve para cada tarea de tu negocio.</span></li>
+          <li>${I.check}<span>Practicar con instrucciones listas para copiar.</span></li>
+          <li>${I.check}<span>Conocer lo que la IA puede y no puede hacer, y usarla con seguridad.</span></li>
+        </ul></div>
+      <button class="btn btn-primario btn-bloque" data-ir="negocio">Empezar</button>
+      <button class="btn btn-claro btn-bloque" data-ir="inicio">Ya tengo cuenta</button>
+    </div>`;
+
+  P.negocio = () => `
+    ${barra('Tu negocio', 'bienvenida')}
+    <div class="screen">
+      <div class="pasos-onb" aria-label="Paso 1 de 3"><span class="on"></span><span></span><span></span></div>
+      <h1>¿Qué tipo de negocio tienes?</h1>
+      <p class="muted">Así te mostramos lecciones con ejemplos de negocios como el tuyo.</p>
+      <div class="opciones">${NEGOCIOS.map((n) => `<button class="opcion" data-negocio="${n.id}" aria-pressed="${S.negocio === n.id}">${I[n.icon]}<b>${n.nombre}</b></button>`).join('')}</div>
+      <button class="btn btn-primario btn-bloque" data-ir="metas">Continuar</button>
+    </div>`;
+
+  P.metas = () => `
+    ${barra('Tus metas', 'negocio')}
+    <div class="screen">
+      <div class="pasos-onb" aria-label="Paso 2 de 3"><span class="on"></span><span class="on"></span><span></span></div>
+      <h1>¿Qué quieres mejorar primero?</h1>
+      <p class="muted">Puedes elegir varias.</p>
+      <div class="lista-opciones">${METAS.map((m) => `<button class="opcion" data-meta="${esc(m)}" aria-pressed="${S.metas.includes(m)}"><b>${m}</b></button>`).join('')}</div>
+      <button class="btn btn-primario btn-bloque" data-ir="tiempo">Continuar</button>
+    </div>`;
+
+  P.tiempo = () => `
+    ${barra('Tu tiempo', 'metas')}
+    <div class="screen">
+      <div class="pasos-onb" aria-label="Paso 3 de 3"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+      <h1>¿Cuánto tiempo tienes al día?</h1>
+      <div class="segmentado" role="group" aria-label="Minutos al día">${[5, 10, 15].map((m) => `<button data-minutos="${m}" aria-pressed="${S.minutos === m}">${m} min</button>`).join('')}</div>
+      <h2>Tamaño de la letra</h2>
+      <div class="segmentado" role="group" aria-label="Tamaño de letra">${[['normal', 'Normal'], ['grande', 'Grande'], ['muy-grande', 'Muy grande']].map(([v, t]) => `<button data-letra="${v}" aria-pressed="${S.letra === v}">${t}</button>`).join('')}</div>
+      <div class="card"><p>Así se ve el texto de las lecciones. Puedes cambiarlo cuando quieras en tu perfil.</p></div>
+      <button class="btn btn-primario btn-bloque" data-ir="inicio">Ver mi ruta</button>
+    </div>`;
+
+  P.inicio = () => {
+    const l = actual(), hechas = S.hechas.length;
+    return `
+    <header class="top"><div class="marca"><span class="avatar">N</span><b>Pregúntale a Nia</b></div><span class="chip-proto">Prototipo</span></header>
+    <div class="screen">
+      <div><p class="muted">¡Hola! Tu ruta:</p><h1>${esc(neg().nombre)}</h1></div>
+      <div class="card destacada">
+        <span class="eyebrow">Lección de hoy · ${l.min} min</span>
+        <h2>${esc(l.t)}</h2>
+        <p class="muted">${esc(leccion(l.id).modulo)}</p>
+        <button class="btn btn-claro" data-leccion="${l.id}">${I.play} Continuar</button>
+      </div>
+      <div class="card">
+        <div class="row"><span class="grow"><b>${hechas} de ${TOTAL} lecciones</b></span><span class="pill mango">Racha de ${S.racha} días</span></div>
+        <div class="barra" role="img" aria-label="${hechas} de ${TOTAL} lecciones"><i style="width:${Math.round((hechas / TOTAL) * 100)}%"></i></div>
+        <p class="muted small">Meta diaria: ${S.minutos} minutos</p>
+      </div>
+      <div class="accesos">
+        <button class="acceso" data-ir="nia"><span class="avatar">N</span><b>Pregúntale a Nia</b><span class="muted small">Qué IA usar</span></button>
+        <button class="acceso" data-ir="instrucciones">${I.lista}<b>Instrucciones listas</b><span class="muted small">Para copiar</span></button>
+        <button class="acceso" data-ir="plantillas">${I.hoja}<b>Plantillas</b><span class="muted small">Inventario y cuentas</span></button>
+        <button class="acceso" data-ir="seguro">${I.escudo}<b>Uso seguro</b><span class="muted small">Cuida tus datos</span></button>
+      </div>
+      <button class="card" data-ir="ayuda" style="text-align:left;flex-direction:row;align-items:center">
+        <span style="color:var(--brand)">${I.ayuda}</span><span class="grow"><b>¿Necesitas ayuda?</b><br><span class="muted small">Habla con un asesor o inscríbete a un taller</span></span>
+      </button>
+    </div>`;
+  };
+
+  P.aprender = () => `
+    ${barra('Tu ruta de aprendizaje')}
+    <div class="screen">
+      <div class="row"><span class="grow"><p class="muted">Ruta</p><h1>${esc(neg().nombre)}</h1></span></div>
+      ${MODULOS.map((m) => `<section class="modulo"><h2>${m.titulo}</h2>${m.lecciones.map(filaLeccion).join('')}</section>`).join('')}
+      <button class="btn btn-claro btn-bloque" data-ir="planes">Ver planes</button>
+    </div>`;
+
+  let leccionVista = 'L1';
+  P.leccion = () => {
+    const l = leccion(leccionVista) || leccion('L1');
+    const x = info(l.id), h = x.herr ? HERRAMIENTAS[x.herr] : null;
+    return `
+    ${barra(esc(l.modulo), 'aprender')}
+    <div class="screen">
+      <div class="video" aria-label="Video de la lección"><button aria-label="Reproducir video" data-video>${I.play}</button><span class="sub">Video de 2 minutos · con subtítulos</span></div>
+      <div><span class="eyebrow">${l.min} minutos</span><h1>${esc(l.t)}</h1></div>
+      <div class="card"><h3>Lo que vas a lograr</h3><p>${esc(conNegocio(x.logro))}</p></div>
+      ${h ? `<button class="mini-herr" data-ficha="${x.herr}" style="text-align:left"><span class="logo" style="background:${h.color}">${h.letra}</span><span class="grow"><b>Herramienta: ${h.nombre}</b><br><span class="muted small">${esc(x.alt)}</span></span></button>` : ''}
+      <section class="stack"><h2>Paso a paso</h2>
+        <ol class="pasos">${x.pasos.map((p) => `<li><span>${esc(p)}</span></li>`).join('')}</ol></section>
+      <div class="aviso">${I.ojo}<p><b>Ojo con el límite:</b> ${esc(x.limite)}</p></div>
+      <button class="btn btn-primario btn-bloque" data-ir="${x.instr === null ? 'seguro' : 'practica'}">Practicar ahora</button>
+    </div>`;
+  };
+
+  P.practica = () => {
+    const x = info(leccionVista);
+    const txt = conNegocio(INSTRUCCIONES[x.instr === null || x.instr === undefined ? 0 : x.instr].txt);
+    return `
+    ${barra('Práctica guiada', 'leccion')}
+    <div class="screen">
+      <section class="stack"><span class="eyebrow">Paso 1 de 3</span><h2>Copia esta instrucción</h2>
+        <div class="instruccion" id="instr-practica">${esc(txt)}</div>
+        <button class="btn btn-primario" data-copiar="practica">${I.copiar} Copiar instrucción</button></section>
+      <section class="stack"><span class="eyebrow">Paso 2 de 3</span><h2>Ábrela en tu herramienta</h2>
+        <div class="grid2">
+          <button class="btn btn-claro" data-abrir="Meta AI">Meta AI</button>
+          <button class="btn btn-claro" data-abrir="ChatGPT">ChatGPT</button>
+          <button class="btn btn-claro" data-abrir="Gemini">Gemini</button>
+          <button class="btn btn-claro" data-abrir="Copilot">Copilot</button>
+        </div></section>
+      <section class="stack"><span class="eyebrow">Paso 3 de 3</span><h2>Revisa el resultado</h2>
+        <div class="card">
+          <label class="row"><input type="checkbox" id="rev1"><span class="grow">¿La respuesta tiene sentido para tu negocio?</span></label>
+          <label class="row"><input type="checkbox" id="rev2"><span class="grow">¿Revisaste los números, precios y cantidades?</span></label>
+          <label class="row"><input type="checkbox" id="rev3"><span class="grow">¿Corregiste lo que la IA dijo mal?</span></label>
+        </div></section>
+      <button class="btn btn-mango btn-bloque" data-terminar>${I.check} Terminé la práctica</button>
+    </div>`;
+  };
+
+  P.logro = () => `
+    ${barra('¡Bien hecho!', 'inicio')}
+    <div class="screen celebra">
+      <div class="medalla-grande">${I.medalla}</div>
+      <h1>¡Lección completada!</h1>
+      <p class="muted">Terminaste "${esc((leccion(leccionVista) || leccion('L1')).t)}". Tu racha subió a ${S.racha} días.</p>
+      <div class="card" style="text-align:left;width:100%"><h3>Para recordar</h3><p>${esc(info(leccionVista).recordar)}</p></div>
+      <button class="btn btn-primario btn-bloque" data-ir="aprender">Seguir con mi ruta</button>
+      <button class="btn btn-claro btn-bloque" data-ir="inicio">Volver al inicio</button>
+    </div>`;
+
+  P.nia = () => `
+    ${barra('Pregúntale a Nia')}
+    <div class="screen">
+      <div class="chat" id="chat">
+        <div class="msg nia"><span class="nia-cab"><span class="avatar">N</span>Nia</span><p>Hola, soy Nia. Pregúntame qué herramienta de inteligencia artificial te sirve para tu ${esc(neg().corto)}. Te respondo con la herramienta, una lección y una instrucción lista para copiar.</p></div>
+        ${chat.map(burbuja).join('')}
+      </div>
+      <div class="sugerencias">${NIA_SUGERENCIAS.map((s) => `<button class="sugerencia" data-preguntar="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+      <form class="entrada" id="form-nia"><input id="pregunta-nia" placeholder="Escribe tu pregunta" autocomplete="off" aria-label="Tu pregunta para Nia"><button class="btn btn-primario" aria-label="Enviar pregunta">${I.enviar}</button></form>
+    </div>`;
+
+  function burbuja(m) {
+    if (m.de === 'yo') return `<div class="msg yo">${esc(m.texto)}</div>`;
+    const r = m.r;
+    let extra = '';
+    if (r && r.herr) { const h = HERRAMIENTAS[r.herr]; extra += `<button class="mini-herr" data-ficha="${r.herr}" style="text-align:left"><span class="logo" style="background:${h.color}">${h.letra}</span><span class="grow"><b>${h.nombre}</b><br><span class="muted small">Ver qué puede y qué no puede hacer</span></span></button>`; }
+    if (r && r.instr !== undefined) extra += `<div class="instruccion">${esc(conNegocio(INSTRUCCIONES[r.instr].txt))}</div><button class="btn btn-claro" data-copiar-i="${r.instr}">${I.copiar} Copiar instrucción</button>`;
+    if (r && r.leccion) extra += `<button class="btn-texto" data-leccion="${r.leccion}">Ver la lección: ${esc(leccion(r.leccion).t)} →</button>`;
+    if (r && r.ir) extra += `<button class="btn-texto" data-ir="${r.ir}">${r.irTxt} →</button>`;
+    return `<div class="msg nia"><span class="nia-cab"><span class="avatar">N</span>Nia</span><p>${esc(m.texto)}</p>${extra}</div>`;
+  }
+  function responder(pregunta) {
+    const q = pregunta.toLowerCase();
+    const r = NIA.find((x) => x.claves.some((k) => q.includes(k)));
+    chat.push({ de: 'yo', texto: pregunta });
+    if (r) chat.push({ de: 'nia', texto: r.texto, r });
+    else chat.push({ de: 'nia', texto: 'Todavía no tengo esa respuesta. Un asesor te puede ayudar por WhatsApp o en un taller cerca de tu negocio.', r: { ir: 'ayuda', irTxt: 'Hablar con un asesor' } });
+    render('nia');
+    const mias = document.querySelectorAll('#chat .msg.yo');
+    if (mias.length) mias[mias.length - 1].scrollIntoView({ block: 'start' });
+  }
+
+  P.herramientas = () => `
+    ${barra('Herramientas de IA')}
+    <div class="screen">
+      <p class="muted">Conoce qué hace cada herramienta, hasta dónde llega y qué cuidados tener.</p>
+      <div class="ficha-lista">${Object.entries(HERRAMIENTAS).map(([id, h]) => `<button class="ficha-item" data-ficha="${id}"><span class="logo" style="background:${h.color}">${h.letra}</span><span class="grow"><b>${h.nombre}</b><br><span class="muted small">${esc(h.que)}</span></span></button>`).join('')}</div>
+      <h2>Comparación rápida</h2>
+      <div class="tabla-wrap"><table>
+        <thead><tr><th>Herramienta</th><th>Textos</th><th>Imágenes</th><th>En WhatsApp</th><th>Versión gratis</th></tr></thead>
+        <tbody>
+          <tr><td><b>ChatGPT</b></td><td class="si">Sí</td><td class="lim">Con límites</td><td class="no">No</td><td class="si">Sí</td></tr>
+          <tr><td><b>Meta AI</b></td><td class="si">Sí</td><td class="lim">Según el país</td><td class="si">Sí</td><td class="si">Sí</td></tr>
+          <tr><td><b>Gemini</b></td><td class="si">Sí</td><td class="lim">Con límites</td><td class="no">No</td><td class="si">Sí</td></tr>
+          <tr><td><b>Copilot</b></td><td class="si">Sí</td><td class="lim">Con límites</td><td class="no">No</td><td class="si">Sí</td></tr>
+          <tr><td><b>Canva</b></td><td class="lim">Textos cortos</td><td class="si">Sí</td><td class="no">No</td><td class="si">Sí</td></tr>
+        </tbody></table></div>
+      <p class="muted small">Las funciones de estas herramientas cambian con frecuencia. Nia actualiza las fichas cuando eso pasa.</p>
+    </div>`;
+
+  let fichaVista = 'chatgpt';
+  P.ficha = () => {
+    const h = HERRAMIENTAS[fichaVista] || HERRAMIENTAS.chatgpt;
+    const lista = (arr) => `<ul>${arr.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`;
+    return `
+    ${barra(h.nombre, 'herramientas')}
+    <div class="screen">
+      <div class="row"><span class="logo" style="background:${h.color};width:60px;height:60px;font-size:1.4rem">${h.letra}</span><span class="grow"><h1>${h.nombre}</h1><span class="muted">De ${h.empresa}</span></span></div>
+      <div class="card seccion-ficha"><h3>Qué es</h3><p>${esc(h.que)}</p></div>
+      <div class="card seccion-ficha"><h3>Para qué te sirve en tu negocio</h3>${lista(h.sirve)}</div>
+      <div class="card seccion-ficha"><h3>Hasta dónde llega</h3>${lista(h.llega)}</div>
+      <div class="card seccion-ficha" style="border-color:var(--mango)"><h3>Limitaciones</h3>${lista(h.limites)}</div>
+      <div class="card seccion-ficha"><h3>Cuánto cuesta</h3><p>${esc(h.costo)}</p></div>
+      <div class="aviso">${I.escudo}<p><b>Cuida tus datos:</b> ${esc(h.cuidado)}</p></div>
+      <button class="btn btn-primario btn-bloque" data-ir="aprender">Ver lecciones con ${h.nombre}</button>
+    </div>`;
+  };
+
+  let filtro = 'Todas';
+  P.instrucciones = () => {
+    const tags = ['Todas', 'Inventario', 'Publicidad', 'Clientes', 'Cuentas', 'Precios'];
+    const items = INSTRUCCIONES.map((x, i) => Object.assign({ i }, x)).filter((x) => filtro === 'Todas' || x.tag === filtro);
+    return `
+    ${barra('Instrucciones listas', 'inicio')}
+    <div class="screen">
+      <p class="muted">Cópialas, cambia lo que está entre corchetes y pégalas en tu herramienta de IA.</p>
+      <div class="filtros" role="group" aria-label="Filtrar por tarea">${tags.map((t) => `<button class="filtro" data-filtro="${t}" aria-pressed="${filtro === t}">${t}</button>`).join('')}</div>
+      ${items.map((x) => `<div class="card"><div class="row"><span class="grow"><span class="pill">${x.tag}</span><h3 style="margin-top:6px">${esc(x.t)}</h3></span>
+        <button class="icon-btn" data-fav="${x.i}" aria-label="Guardar en favoritos" aria-pressed="${S.favoritos.includes(x.i)}" style="${S.favoritos.includes(x.i) ? 'color:var(--mango);border-color:var(--mango)' : ''}">${I.estrella}</button></div>
+        <div class="instruccion">${esc(conNegocio(x.txt))}</div>
+        <button class="btn btn-claro" data-copiar-i="${x.i}">${I.copiar} Copiar</button></div>`).join('')}
+    </div>`;
+  };
+
+  P.plantillas = () => `
+    ${barra('Plantillas', 'inicio')}
+    <div class="screen">
+      <p class="muted">Hojas de cálculo listas para usar con la ayuda de la IA.</p>
+      <button class="card" data-ir="precio" style="text-align:left"><span class="row"><span style="color:var(--brand)">${I.hoja}</span><span class="grow"><b>Precio con ganancia</b><br><span class="muted small">Calcula a cuánto vender cada producto</span></span><span class="pill ok">Abrir</span></span></button>
+      ${[['Inventario y lista de pedido', 'Lo que tienes, lo que vendiste y lo que debes pedir'], ['¿Cuánto gané hoy?', 'Ventas, gastos y ganancia del día'], ['Alertas de vencimiento', 'Productos que vencen en los próximos 30 días'], ['Calendario de publicaciones', 'Qué publicar cada día de la semana']].map(([t, d]) => `
+      <div class="card"><div class="row"><span style="color:var(--brand)">${I.hoja}</span><span class="grow"><b>${t}</b><br><span class="muted small">${d}</span></span></div>
+      <button class="btn btn-claro" data-sheets="${t}">Abrir en Google Sheets</button></div>`).join('')}
+      <div class="card"><h3>Vista previa: ¿Cuánto gané hoy?</h3>
+        <div class="cuaderno"><div><span>Ventas del día</span><b>${pesos(486000)}</b></div><div><span>Pago a proveedor</span><b>−${pesos(310000)}</b></div><div><span>Otros gastos</span><b>−${pesos(42000)}</b></div><div><span>Ganancia</span><b>${pesos(134000)}</b></div></div>
+        <p class="muted small">Valores de ejemplo.</p></div>
+    </div>`;
+
+  P.precio = () => `
+    ${barra('Precio con ganancia', 'plantillas')}
+    <div class="screen">
+      <p class="muted">Escribe lo que te cuesta un producto y cuánto le quieres ganar.</p>
+      <div class="campo"><label for="costo">¿Cuánto te cuesta cada unidad?</label><input id="costo" inputmode="numeric" value="2500"></div>
+      <div class="campo"><label for="ganancia">¿Cuánto le quieres ganar? (% sobre el costo)</label><input id="ganancia" inputmode="numeric" value="30"></div>
+      <div class="resultado" aria-live="polite"><span class="muted">Precio de venta sugerido</span><span class="grande" id="precio-res"></span><span id="precio-det" class="small"></span></div>
+      <div class="aviso">${I.ojo}<p>El precio se redondea hacia arriba a los $50 más cercanos. Compara con los precios de tu barrio antes de decidir.</p></div>
+    </div>`;
+
+  let quiz = {};
+  const QUIZ = [
+    { p: '¿Puedo pegar en ChatGPT la lista de productos que vendí esta semana?', ok: 'Sí', bien: 'Correcto. Los nombres de productos y las cantidades no son datos sensibles.', mal: 'Sí se puede: la lista de productos y cantidades no es un dato sensible.' },
+    { p: '¿Puedo escribirle a la IA el número de mi cuenta de Nequi para que me ayude con un cobro?', ok: 'No', bien: 'Correcto. Los números de cuenta, contraseñas y códigos nunca se comparten.', mal: 'No. Los números de cuenta, contraseñas y códigos nunca se comparten con la IA.' },
+    { p: 'La IA me dio el total de ventas del mes. ¿Lo copio sin revisarlo?', ok: 'No', bien: 'Correcto. La IA se puede equivocar en cuentas: revisa siempre.', mal: 'Mejor no. La IA se puede equivocar en cuentas: revisa siempre el resultado.' },
+  ];
+  P.seguro = () => `
+    ${barra('Uso seguro de la IA', 'inicio')}
+    <div class="screen">
+      <h1>Semáforo de datos</h1>
+      <div class="semaforo">
+        <div class="luz verde"><span class="punto"></span><div><b>Puedes compartir</b><p class="small">Nombres de productos, cantidades vendidas, precios de venta, ideas para tu negocio.</p></div></div>
+        <div class="luz amarilla"><span class="punto"></span><div><b>Con cuidado</b><p class="small">Totales de ventas y gastos. Usa totales, nunca nombres de clientes.</p></div></div>
+        <div class="luz roja"><span class="punto"></span><div><b>Nunca compartas</b><p class="small">Contraseñas, números de cuenta, códigos de verificación, cédulas y datos personales de tus clientes.</p></div></div>
+      </div>
+      <h2>Ponte a prueba</h2>
+      ${QUIZ.map((q, i) => `<div class="card pregunta-quiz"><b>${i + 1}. ${esc(q.p)}</b>
+        <div class="respuestas">${['Sí', 'No'].map((r) => `<button data-quiz="${i}" data-resp="${r}" aria-pressed="${quiz[i] === r}">${r}</button>`).join('')}</div>
+        ${quiz[i] ? `<div class="feedback ${quiz[i] === q.ok ? 'bien' : 'mal'}">${esc(quiz[i] === q.ok ? q.bien : q.mal)}</div>` : ''}</div>`).join('')}
+    </div>`;
+
+  let llamada = { dia: null, hora: null, hecha: false };
+  P.ayuda = () => `
+    ${barra('Ayuda', 'inicio')}
+    <div class="screen">
+      <div class="card"><h3>Escríbele a un asesor</h3><p class="muted">Te responde una persona por WhatsApp, de lunes a sábado.</p>
+        <button class="btn btn-primario" data-whatsapp>${I.ayuda} Escribir por WhatsApp</button></div>
+      <div class="card"><h3>Agenda una llamada</h3><p class="muted">Incluida en el plan Acompañado.</p>
+        <div class="filtros">${['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].map((d) => `<button class="filtro" data-dia="${d}" aria-pressed="${llamada.dia === d}">${d}</button>`).join('')}</div>
+        <div class="filtros">${['8 a 10 a. m.', '2 a 4 p. m.', '6 a 8 p. m.'].map((h) => `<button class="filtro" data-hora="${h}" aria-pressed="${llamada.hora === h}">${h}</button>`).join('')}</div>
+        <button class="btn btn-claro" data-agendar>${I.calendario} Pedir la llamada</button>
+        ${llamada.hecha ? `<div class="feedback bien">En la versión final, un asesor te llamaría el ${llamada.dia.toLowerCase()} entre ${llamada.hora}.</div>` : ''}</div>
+      <h2>Talleres presenciales</h2>
+      ${[['Publicidad con IA para tiendas de barrio', 'Comuna 10 · sábados, 9:00 a. m.'], ['Cuentas e inventario con IA', 'Comuna 2 · sábados, 2:00 p. m.'], ['Uso seguro de la IA', 'Comuna 19 · miércoles, 6:00 p. m.']].map(([t, d]) => `
+      <div class="card"><div class="row"><span style="color:var(--brand)">${I.calendario}</span><span class="grow"><b>${t}</b><br><span class="muted small">${d}</span></span></div><button class="btn btn-claro" data-taller="${t}">Quiero ir</button></div>`).join('')}
+    </div>`;
+
+  P.planes = () => `
+    ${barra('Planes', 'aprender')}
+    <div class="screen">
+      <p class="muted">Tu plan actual: <b>Gratis</b></p>
+      ${[
+        { n: 'Gratis', p: 0, f: ['Fichas de herramientas de IA', 'Primeras lecciones de cada ruta', 'Módulo de uso seguro', 'Una lección por semana en WhatsApp'] },
+        { n: 'Básico', p: 9900, f: ['Todas las lecciones de tu ruta', 'Todas las instrucciones y plantillas', 'Grupo de WhatsApp con comerciantes como tú'] },
+        { n: 'Acompañado', p: 19900, rec: true, f: ['Todo lo del plan Básico', 'Asesoría personalizada cada mes', 'Talleres presenciales en tu comuna'] },
+      ].map((pl) => `<div class="plan ${pl.rec ? 'recomendado' : ''}">
+        <div class="row"><span class="grow"><h2>${pl.n}</h2></span>${pl.rec ? '<span class="pill mango">Con asesoría</span>' : ''}</div>
+        <span class="precio">${pl.p ? pesos(pl.p) : '$0'}<span class="muted small" style="font-family:var(--font-body);font-weight:400"> al mes</span></span>
+        <ul>${pl.f.map((x) => `<li>${x}</li>`).join('')}</ul>
+        <button class="btn ${pl.n === 'Gratis' ? 'btn-claro' : 'btn-primario'}" data-plan="${pl.n}">${pl.n === 'Gratis' ? 'Plan actual' : 'Elegir ' + pl.n}</button></div>`).join('')}
+    </div>`;
+
+  P.perfil = () => `
+    ${barra('Tu perfil')}
+    <div class="screen">
+      <div class="card"><span class="eyebrow">Tu negocio</span><h2>${esc(neg().nombre)}</h2><button class="btn-texto" data-ir="negocio">Cambiar tipo de negocio →</button></div>
+      <h2>Logros</h2>
+      <div class="logros">
+        <div class="logro"><span class="medalla">${I.medalla}</span>Primera lección</div>
+        <div class="logro"><span class="medalla">${I.escudo}</span>Uso seguro</div>
+        <div class="logro"><span class="medalla">${I.estrella}</span>Racha de 3 días</div>
+        <div class="logro bloq"><span class="medalla">${I.lista}</span>Ruta completa</div>
+        <div class="logro bloq"><span class="medalla">${I.hoja}</span>Primera plantilla</div>
+        <div class="logro bloq"><span class="medalla">${I.calendario}</span>Primer taller</div>
+      </div>
+      <h2>Tamaño de la letra</h2>
+      <div class="segmentado" role="group" aria-label="Tamaño de letra">${[['normal', 'Normal'], ['grande', 'Grande'], ['muy-grande', 'Muy grande']].map(([v, t]) => `<button data-letra="${v}" aria-pressed="${S.letra === v}">${t}</button>`).join('')}</div>
+      <div class="card">
+        <div class="row"><span class="grow"><b>Recordatorios por WhatsApp</b><br><span class="muted small">Te enviamos la lección del día</span></span><button class="switch" role="switch" aria-checked="${S.recordatorio}" aria-label="Recordatorios por WhatsApp" data-switch></button></div>
+        ${S.recordatorio ? `<div class="grid2">
+          <div class="campo"><label for="rec-dia">Cuándo</label><select id="rec-dia" data-campo="dia">${['Todos los días', 'De lunes a viernes', 'Fines de semana'].map((d) => `<option ${S.dia === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+          <div class="campo"><label for="rec-hora">Hora</label><select id="rec-hora" data-campo="hora">${['6:00 a. m.', '7:00 a. m.', '12:00 m.', '8:00 p. m.'].map((h) => `<option ${S.hora === h ? 'selected' : ''}>${h}</option>`).join('')}</select></div>
+        </div>` : ''}
+      </div>
+      <button class="btn btn-claro btn-bloque" data-ir="planes">Ver planes</button>
+    </div>`;
+
+  // ---------- enrutador ----------
+  const SIN_TABS = ['bienvenida', 'negocio', 'metas', 'tiempo'];
+  const TAB_DE = { inicio: 'inicio', aprender: 'aprender', leccion: 'aprender', practica: 'aprender', logro: 'aprender', planes: 'aprender', nia: 'nia', herramientas: 'herramientas', ficha: 'herramientas', perfil: 'perfil' };
+  function rutaDeHash() {
+    const h = (location.hash || '').replace('#', '');
+    if (h.startsWith('ficha-') && HERRAMIENTAS[h.slice(6)]) { fichaVista = h.slice(6); return 'ficha'; }
+    if (h.startsWith('leccion-') && leccion(h.slice(8).toUpperCase())) { leccionVista = h.slice(8).toUpperCase(); return 'leccion'; }
+    return P[h] ? h : 'bienvenida';
+  }
+  function render(ruta) {
+    document.getElementById('view').innerHTML = P[ruta]();
+    const sin = SIN_TABS.includes(ruta);
+    document.getElementById('tabs').hidden = sin;
+    document.getElementById('app').classList.toggle('sin-tabs', sin);
+    document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-current', TAB_DE[ruta] === t.dataset.ir ? 'page' : 'false'));
+    if (ruta === 'precio') calcular();
+  }
+  function ir(ruta) {
+    const destino = ruta === 'ficha' ? 'ficha-' + fichaVista : ruta === 'leccion' ? 'leccion-' + leccionVista.toLowerCase() : ruta;
+    if (location.hash === '#' + destino) { render(ruta); } else { location.hash = destino; }
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', () => { render(rutaDeHash()); window.scrollTo(0, 0); });
+
+  function calcular() {
+    const c = parseFloat(String(document.getElementById('costo').value).replace(/\D/g, '')) || 0;
+    const g = parseFloat(String(document.getElementById('ganancia').value).replace(/[^\d.]/g, '')) || 0;
+    const precio = Math.ceil((c * (1 + g / 100)) / 50) * 50;
+    document.getElementById('precio-res').textContent = pesos(precio);
+    document.getElementById('precio-det').textContent = c ? `Ganas ${pesos(precio - c)} por cada unidad.` : 'Escribe el costo del producto.';
+  }
+
+  // ---------- eventos ----------
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('button, [data-ir]'); if (!b) return;
+    const d = b.dataset;
+    if (d.ir) return ir(d.ir);
+    if (d.negocio) { S.negocio = d.negocio; guardar(); return render('negocio'); }
+    if (d.meta) { S.metas = S.metas.includes(d.meta) ? S.metas.filter((m) => m !== d.meta) : S.metas.concat(d.meta); guardar(); return render('metas'); }
+    if (d.minutos) { S.minutos = +d.minutos; guardar(); return render('tiempo'); }
+    if (d.letra) { S.letra = d.letra; document.documentElement.dataset.letra = d.letra; guardar(); return render(rutaDeHash()); }
+    if (d.leccion) { leccionVista = d.leccion; const l = leccion(d.leccion); if (l.plan !== 'gratis' && !S.hechas.includes(l.id)) { toast('Esta lección es del plan Básico'); return ir('planes'); } return ir('leccion'); }
+    if (d.video !== undefined) return toast('Reproduciendo video de la lección');
+    if (d.copiar === 'practica') return copiar(document.getElementById('instr-practica').textContent);
+    if (d.copiarI !== undefined) return copiar(conNegocio(INSTRUCCIONES[+d.copiarI].txt));
+    if (d.abrir) return toast(`En la app final este botón abre ${d.abrir}`);
+    if (d.terminar !== undefined) { if (!S.hechas.includes(leccionVista)) { S.hechas.push(leccionVista); S.racha += 1; guardar(); } return ir('logro'); }
+    if (d.preguntar) return responder(d.preguntar);
+    if (d.ficha) { fichaVista = d.ficha; return ir('ficha'); }
+    if (d.filtro) { filtro = d.filtro; return render('instrucciones'); }
+    if (d.fav !== undefined) { const i = +d.fav; S.favoritos = S.favoritos.includes(i) ? S.favoritos.filter((x) => x !== i) : S.favoritos.concat(i); guardar(); toast(S.favoritos.includes(i) ? 'Guardada en favoritos' : 'Quitada de favoritos'); return render('instrucciones'); }
+    if (d.sheets) return toast('En la app final se abre la plantilla en Google Sheets');
+    if (d.quiz !== undefined) { quiz[+d.quiz] = d.resp; return render('seguro'); }
+    if (d.whatsapp !== undefined) return toast('En la app final este botón abre el chat con un asesor');
+    if (d.dia) { llamada.dia = d.dia; llamada.hecha = false; return render('ayuda'); }
+    if (d.hora) { llamada.hora = d.hora; llamada.hecha = false; return render('ayuda'); }
+    if (d.agendar !== undefined) { if (!llamada.dia || !llamada.hora) return toast('Elige un día y una hora'); llamada.hecha = true; return render('ayuda'); }
+    if (d.taller) return toast('Te avisaremos por WhatsApp la próxima fecha del taller');
+    if (d.plan) return toast(d.plan === 'Gratis' ? 'Ya tienes el plan Gratis' : `En la app final aquí se paga el plan ${d.plan}`);
+    if (d.switch !== undefined) { S.recordatorio = !S.recordatorio; guardar(); return render('perfil'); }
+  });
+  document.addEventListener('submit', (e) => {
+    if (e.target.id !== 'form-nia') return; e.preventDefault();
+    const v = document.getElementById('pregunta-nia').value.trim(); if (v) responder(v);
+  });
+  document.addEventListener('input', (e) => { if (e.target.id === 'costo' || e.target.id === 'ganancia') calcular(); });
+  document.addEventListener('change', (e) => { const c = e.target.dataset && e.target.dataset.campo; if (c) { S[c] = e.target.value; guardar(); } });
+
+  render(rutaDeHash());
+})();
+</script>
+</body>
+</html>
